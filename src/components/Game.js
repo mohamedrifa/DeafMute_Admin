@@ -37,12 +37,12 @@ export default function Game() {
     }
   };
 
-  const handleEdit = (id, game) => {
-    setEditingId(id);
-    setEnglishWord(game.en);
-    setTamilWord(game.ta);
-    setImageURL(game.img);
-  };
+  // const handleEdit = (id, game) => {
+  //   setEditingId(id);
+  //   setEnglishWord(game.en);
+  //   setTamilWord(game.ta);
+  //   setImageURL(game.img);
+  // };
 
   const handleDelete = async (id) => {
     try {

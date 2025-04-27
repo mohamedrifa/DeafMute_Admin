@@ -1,35 +1,17 @@
-// App.js
+// components/App.js
 import React, { useState, useEffect } from 'react';
-import { initializeApp } from 'firebase/app';
 import { 
-  getAuth, 
   signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
   onAuthStateChanged,
   signOut
 } from 'firebase/auth';
-// import Dashboard from './Dashboard';
-
-// Initialize Firebase - replace with your config
-const firebaseConfig = {
-    apiKey: "AIzaSyApOeqHia2T0eIjq9P9GJx7ADqLwjfU4pw",
-    authDomain: "deafmute-6be1a.firebaseapp.com",
-    databaseURL: "https://deafmute-6be1a-default-rtdb.firebaseio.com",
-    projectId: "deafmute-6be1a",
-    storageBucket: "deafmute-6be1a.firebasestorage.app",
-    messagingSenderId: "1015536886471",
-    appId: "1:1015536886471:web:7a6446cca4627b2ca7d4e2",
-};
-
-// Initialize Firebase app
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+import { auth } from '../firebase';  // Assuming firebaseConfig.js is the file with the initialization code
+import Dashboard from './Dashboard';
 
 function App() {
   const [user, setUser] = useState(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -42,25 +24,6 @@ function App() {
     return () => unsubscribe();
   }, []);
 
-  const handleAuthentication = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      if (isSignUp) {
-        await createUserWithEmailAndPassword(auth, email, password);
-      } else {
-        await signInWithEmailAndPassword(auth, email, password);
-      }
-    } catch (err) {
-      console.error("Authentication error:", err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSignOut = async () => {
     try {
       await signOut(auth);
@@ -69,32 +32,35 @@ function App() {
     }
   };
 
+  const handleAuthentication = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+  
+    try {
+      let userCredential;
+      userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const uid = userCredential.user.uid;
+      if(uid !== "FN0vlONM4hWgtC9OGfK76dOpkbM2"){
+        setError("Only Admin Can Login.");
+        handleSignOut();
+      }
+      console.log("User UID:", uid);
+    } catch (err) {
+      console.error("Authentication error:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
 return (
+    user ? <Dashboard/> :(
     <div className="min-h-screen bg-gray-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        {user ? (
-            <div className="text-center">
-                <h2 className="text-2xl font-bold text-teal-400">Welcome, {user.email}!</h2>
-                <p className="mt-4 text-gray-300">You are now signed in.</p>
-                <button
-                    onClick={() => {
-                        window.location.href = '/dashboard'; // Redirect to the dashboard
-                    }}
-                    className="mt-6 px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                >
-                    Go to Dashboard
-                </button>
-                <button
-                    onClick={handleSignOut}
-                    className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
-                >
-                    Sign Out
-                </button>
-            </div>
-        ) : (
             <div className="max-w-md w-full space-y-8 bg-gray-800 p-10 rounded-xl shadow-lg">
                 <div>
                     <h2 className="mt-6 text-center text-3xl font-extrabold text-teal-400">
-                        {isSignUp ? 'Create Account' : 'Sign In'}
+                        Sign In
                     </h2>
                 </div>
                 <form className="mt-8 space-y-6" onSubmit={handleAuthentication}>
@@ -119,7 +85,7 @@ return (
                                 id="password"
                                 name="password"
                                 type="password"
-                                autoComplete={isSignUp ? 'new-password' : 'current-password'}
+                                autoComplete="current-password"
                                 required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
@@ -149,22 +115,14 @@ return (
                                     </svg>
                                 </span>
                             ) : null}
-                            {loading ? 'Processing...' : isSignUp ? 'Sign Up' : 'Sign In'}
+                            {loading ? 'Processing...' : 'Sign In'}
                         </button>
                     </div>
                 </form>
-                <div className="text-center mt-4">
-                    <button
-                        type="button"
-                        onClick={() => setIsSignUp(!isSignUp)}
-                        className="text-sm text-teal-400 hover:text-teal-300 focus:outline-none"
-                    >
-                        {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
-                    </button>
-                </div>
+                
             </div>
-        )}
     </div>
+    )
 );
 }
 
